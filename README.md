@@ -51,9 +51,9 @@ La salida producida será:
 ## Limitaciones actuales
 
 - Múltiples transformaciones identificadas consecutivamente se muestran como un único cambio.
-- En caso de un conjunto de palbras consecutivas transformados en múltiple números:
+- En caso de un conjunto de palabras consecutivas transformadas en múltiple números:
 ```
   Cadena original:     "Quinientos cincuenta y cinco noventa y dos veinte números"
   Cadena transformada: "555 92 20 números
 ```
-  solo es posible identificar la palabra inicial asociada al primer número ("Quininetos") y la palabra final asociada al último número ("veinte").
+  Solo es posible identificar la palabra inicial asociada al primer número ("Quininetos") y la palabra final asociada al último número ("veinte").
