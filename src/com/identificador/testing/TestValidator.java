@@ -10,28 +10,27 @@ public class TestValidator {
     int maxTransformations;
     float averageTransformations;
 
-    private String generateTestString(String originalString, ArrayList<Result> changesDetected){
+    private String generateTestString(String originalString, ArrayList<Result> changesDetected) {
         String originalCopy = originalString;
         String segment;
-        StringBuilder generatedString= new StringBuilder();
-        int changes= changesDetected.size();
+        StringBuilder generatedString = new StringBuilder();
+        int changes = changesDetected.size();
         int startIndex, endIndex;
 
-        for (int i = changes-1; i >= 0 ; i--) {
-            startIndex=changesDetected.get(i).getStartIndex();
-            endIndex=changesDetected.get(i).getEndIndex();
-            String ttext=changesDetected.get(i).getTransformedText();
+        for (int i = changes - 1; i >= 0; i--) {
+            startIndex = changesDetected.get(i).getStartIndex();
+            endIndex = changesDetected.get(i).getEndIndex();
 
-            if(endIndex < originalCopy.length()){
-                segment = originalCopy.substring(endIndex+1);
-                generatedString.insert(0,segment);
+            if (endIndex < originalCopy.length()) {
+                segment = originalCopy.substring(endIndex + 1);
+                generatedString.insert(0, segment);
             }
             generatedString.insert(0, changesDetected.get(i).getTransformedText());
 
-            if(startIndex > 0){
+            if (startIndex > 0) {
                 originalCopy = originalCopy.substring(0, startIndex);
-                if(i==0){
-                    generatedString.insert(0,originalCopy );
+                if (i == 0) {
+                    generatedString.insert(0, originalCopy);
                 }
             }
         }
@@ -39,12 +38,12 @@ public class TestValidator {
         return generatedString.toString();
     }
 
-    public void singleValidation(String o, String t){
-        Identifier identifier = new Identifier(o,t);
+    public void singleValidation(String o, String t) {
+        Identifier identifier = new Identifier(o, t);
         ArrayList<Result> results = identifier.identifyChanges();
 
         //Display List with Changes
-        if(results.size()>0) {
+        if (results.size() > 0) {
             System.out.println("--- Original String ---");
             System.out.println(o);
             System.out.println("--- Transformed String ---");
@@ -60,54 +59,64 @@ public class TestValidator {
         generateTestSamples();
         int invalidStrings = 0;
         int testsSize = this.tests.size();
-        maxTransformations=0;
-        averageTransformations=0.0f;
+        maxTransformations = 0;
+        averageTransformations = 0.0f;
         String testString;
         Identifier identifier;
 
-        for (int i = 0; i < testsSize ; i++) {
+        for (int i = 0; i < testsSize; i++) {
             //Extracting values associated to the current change
-            String originalString=tests.get(i).getOriginal();
-            String transformedString=tests.get(i).getTransformed();
-            identifier = new Identifier(originalString,transformedString);
+            int nExpectedTransformations = tests.get(i).getnExpectedTransformations();
+            String originalString = tests.get(i).getOriginal();
+            String transformedString = tests.get(i).getTransformed();
+            identifier = new Identifier(originalString, transformedString);
             ArrayList<Result> results = identifier.identifyChanges();
             //System.out.println(results.get(i).getEndIndex());
 
             //Generating a test string to compare against the real transformed string
-            if(!results.isEmpty()) {
+            if (!results.isEmpty()) {
                 testString = generateTestString(originalString, results);
-                if( results.size()>maxTransformations){
-                    maxTransformations=results.size();
+                if (results.size() > maxTransformations) {
+                    maxTransformations = results.size();
                 }
-            }else{
-                testString=transformedString;
+            } else {
+                testString = transformedString;
             }
 
-            if(!testString.equals(transformedString)){
+            boolean areDifferent = !testString.equals(transformedString);
+            boolean notExpectedSize = nExpectedTransformations != -1 && nExpectedTransformations != results.size();
+
+            if (areDifferent || notExpectedSize) {
                 System.out.println("------Error------");
                 System.out.println("Original: " + tests.get(i).getOriginal() + "|");
                 System.out.println("Expected: " + tests.get(i).getTransformed() + "|");
-                System.out.println("Obtained: " + testString + "|\n");
+                if (areDifferent) {
+                    System.out.println("Obtained: " + testString + "|\n");
+                }
+                if (notExpectedSize) {
+                    System.out.println("Expected: " + nExpectedTransformations + ", Obtained: " + results.size() + "|\n");
+                }
+
                 invalidStrings++;
-            }else{
-                System.out.println("------VALID TRANSFORMATION!------");
+            } else {
+                /*System.out.println("------VALID TRANSFORMATION!------");
                 System.out.println("Original: " + tests.get(i).getOriginal() + "|");
                 System.out.println("Expected: " + tests.get(i).getTransformed() + "|");
-                System.out.println("Obtained: " + testString + "|\n");
+                System.out.println("Obtained: " + testString + "|\n");*/
             }
         }
 
-        if (invalidStrings>0){
+        if (invalidStrings > 0) {
             System.out.println(invalidStrings + " out of " + testsSize + " strings are invalid!");
-        }else {
-            System.out.println("All " + testsSize +" tests passed!");
+        } else {
+            System.out.println("All " + testsSize + " tests passed!");
         }
 
         //--VALIDATION STATS
-        int[] transformationsCount = new int[maxTransformations+1];
-        System.out.println("Maximum transformations: "+ maxTransformations);
+        int[] transformationsCount = new int[maxTransformations + 1];
+        System.out.println("Maximum transformations: " + maxTransformations);
 
-        for (int i = 0; i < testsSize ; i++) {
+        for (int i = 0; i < testsSize; i++) {
             //Extracting values associated to the current change
             String originalString = tests.get(i).getOriginal();
             String transformedString = tests.get(i).getTransformed();
@@ -125,21 +134,23 @@ public class TestValidator {
 
         System.out.println("\n---TRANSFORMATION STATS---");
         for (int i = 0; i < transformationsCount.length; i++) {
-            if(i!=1) {
+            if (i != 1) {
                 System.out.println(i + " transformations: " + transformationsCount[i] + " tests.");
-            }
-            else {
+            } else {
                 System.out.println(i + " transformation: " + transformationsCount[i] + " tests.");
             }
-            averageTransformations+=(i*transformationsCount[i]);
+            averageTransformations += (i * transformationsCount[i]);
         }
-        averageTransformations/=testsSize;
-        System.out.println("\nWeighted average of transformations: " + (float)Math.round(averageTransformations * 1000f) / 1000f);
+        averageTransformations /= testsSize;
+        System.out.println("\nWeighted average of transformations: " + (float) Math.round(averageTransformations * 1000f) / 1000f);
     }
 
 
     public void generateTestSamples() {
         this.tests = new ArrayList<>();
+        this.tests.add(new TestSample("Las.Palabras% otra", "Las palabras otra"));
+        this.tests.add(new TestSample("Las.Palabras%", "Las palabras"));
+        this.tests.add(new TestSample("Pues son quinientos doce mas trecientos trece si me pagas cuarenta y dos", "Pues son 512 mas 313 si me pagas 42", 3));
         this.tests.add(new TestSample("Tengo entre cinco y diez euros", "Tengo entre cinco y diez euros"));
         this.tests.add(new TestSample("Tengo entre cinco mil dos cientos cincuenta y diez mil quinientos euros", "Tengo entre cinco mil dos cientos cincuenta y diez mil quinientos euros"));
         this.tests.add(new TestSample("Tengo entre cinco mil dos cientos cincuenta euros y diez mil quinientos euros", "Tengo entre cinco mil dos cientos cincuenta euros y 10500 euros"));
@@ -2555,5 +2566,5 @@ public class TestValidator {
         this.tests.add(new TestSample("tres vehículos el sesenta por", "tres vehículos el sesenta por"));
     }
 
-     
+
 }
